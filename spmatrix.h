@@ -17,3 +17,5 @@ typedef struct spmatrix_ {
 
 
 spmatrix makeRandomSpMatrix(int n, float fillRate);
+
+spmatrix readSpMatrixFromFile(char *);

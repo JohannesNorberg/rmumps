@@ -5,6 +5,7 @@
 #include<math.h>
 #include<stdlib.h>
 #include<time.h>
+#include<stdio.h>
 #include "spmatrix.h"
 
 
@@ -43,6 +44,7 @@ spmatrix makeRandomSpMatrix(int n, float fillRate) {
             mat.irn[i] = rr;
             mat.jcn[i] = ss;
             mat.a[i] = 1.0f;
+        }
     }
 
     return mat;
@@ -66,11 +68,11 @@ spmatrix readSpMatrixFromFile(char *filename) {
     mat.a = malloc(mat.nz * sizeof(double));
 
     // Read data from file
-    fread(mat.irn,mat.nz * sizeof(int),mat.nz,fid);
-    fread(mat.jcn,mat.nz * sizeof(int),mat.nz,fid);
-    fread(mat.a,mat.nz * sizeof(double),mat.nz,fid);
+    fread(mat.irn,sizeof(int),mat.nz,fid);
+    fread(mat.jcn,sizeof(int),mat.nz,fid);
+    fread(mat.a,sizeof(double),mat.nz,fid);
 
-    close(fid);
+    fclose(fid);
 
     return mat;
 
