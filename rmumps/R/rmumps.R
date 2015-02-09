@@ -55,15 +55,25 @@ read.dense.RHS <- function(filename) {
     res <- readBin(fid,numeric(),n=d1*d2,size=8)
 
     dim(res) <- c(d1,d2)
+    
+    close(fid)
 
     return(res)
 }
 
 
-mumps.solve <- function(mat,rhs,np = 4) {
+mumps.solve <- function(mat,rhs,np = 4,sym = 0) {
 
-    if (class(mat) != "dgCMatrix")
-        stop("Matrix mat must be of class 'dgCMatrix'")
+    # Check matrix class
+    if (class(mat) != "dgCMatrix" && class(mat) !="dtCMatrix")
+        stop("Matrix mat must be of class 'dgCMatrix' or 'dtCMatrix'")
+
+    # If solving symmetric problem and matrix is given in dgCMatrix,
+    # transform it into dtCMatrix format
+    if ( sym > 0 && class(mat) == "dgCMatrix" ) {
+        mat <- tril(mat)
+    }
+
 
     # Write matrix and rhs to file
     save.sp.matrix(mat,"mumps_mat.bin")
@@ -74,7 +84,7 @@ mumps.solve <- function(mat,rhs,np = 4) {
     # Construct command 
     # In this version sym=2 (general symmetric)
     cmd.path <- paste0(system.file(package="rmumps"),"/bin/mumpsdrv")
-    command <- paste("mpirun","-np",np,cmd.path,"mumps_mat.bin","mumps_rhs.bin",0,sep=' ')
+    command <- paste("mpirun","-np",np,cmd.path,"mumps_mat.bin","mumps_rhs.bin",sym,sep=' ')
     # Execute command
     #cat(command,'\n')
     system(command)
@@ -85,6 +95,8 @@ mumps.solve <- function(mat,rhs,np = 4) {
     #res <- matrix(sol$data,sol$rows,sol$cols)
 
     # Delete files
+    file.remove("mumps_mat.bin")
+    file.remove("mumps_rhs.bin")
 
     # Return solution
     return(sol)

@@ -106,15 +106,15 @@ int main(int argc, char *argv[]) {
     filename_rhs = argv[2];
     int sym = atoi(argv[3]);
 
-    printf("Parameters:\n %s\n %s\n %d   \n\n\n",filename_mat,filename_rhs,sym);
+//    printf("Parameters:\n %s\n %s\n %d   \n\n\n",filename_mat,filename_rhs,sym);
 
     mat = readSpMatrixFromFile(filename_mat);
     rhs = readDenseRHSFromFile(filename_rhs);
 
     //printf("mat: %f %f %f %f\n",mat.a[0],mat.a[1],mat.a[2],mat.a[3]);
     //printf("rhs: %f %f %f %f\n\n",rhs.data[0],rhs.data[1],rhs.data[2],rhs.data[3]);
-    printf("mat: %d %d\n",mat.n,mat.nz);
-    printf("rhs: %d %d\n",rhs.lrhs,rhs.nrhs);
+//    printf("mat: %d %d\n",mat.n,mat.nz);
+//    printf("rhs: %d %d\n",rhs.lrhs,rhs.nrhs);
 
 
     DMUMPS_STRUC_C id;
@@ -168,6 +168,8 @@ int main(int argc, char *argv[]) {
 
     id.job = JOB_END;
     dmumps_c(&id);
+
+    MPI_Finalize();
 
     return 0;
 
