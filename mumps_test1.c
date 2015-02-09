@@ -60,6 +60,9 @@ int main(int argc, char *argv[]) {
     //id.ICNTL(2) = -1;
     //id.ICNTL(3) = -1;
     id.ICNTL(4) = 2;
+    id.ICNTL(7) = 5;
+    id.ICNTL(28) = 2;
+    id.ICNTL(29) = 2;
 
     id.job = 6;
     dmumps_c(&id);

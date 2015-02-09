@@ -24,6 +24,10 @@ make.sym.spmat <- function(n,fill,fname){
   
   nz <- length(B@x)
   
+  if (is.null(fname)) {
+    return(B)
+  } else {
+  
   # Save matrix B in binary format
   fid <- file(fname,"wb")
   
@@ -43,5 +47,5 @@ make.sym.spmat <- function(n,fill,fname){
   close(fid)
   
   return(B)
-  
+}
 }
