@@ -13,7 +13,11 @@ Written by Mikko Orispaa (mikko.orispaa@gmail.com)
 - Ability to have (dense) matrix right hand side
 - tagged as version 0.2.
 
-
+2015-02-10
+- Ability to calculate inverse matrix diagonal
+- ICNTL(7) fixed for 0 for unsymmetric matrices. Default value 7 hangs the calculation
+  (MATIS problem)
+- tagged as 0.2-1
 
 
 
@@ -24,14 +28,16 @@ Written by Mikko Orispaa (mikko.orispaa@gmail.com)
 + able to solve symmetric sparse equations with ONE (dense) RHS
 
 ### Version 0.2
-- Able to calculate elements of A^{-1}
 + Able to solve systems with multiple (matrix) RHS
 
-### Version 0.3
+### Version 0.4
+- Able to calculate elements of A^{-1}
 - Use of MUMPS parameters
 + Able to solve general sparse systems
 
-### Version 0.4
+### Version 0.6
 - able to solve systems with sparse matrix RHS
 
-
+### Version 1.0
+- documentation added
+- INSTALL file with installation instructions written

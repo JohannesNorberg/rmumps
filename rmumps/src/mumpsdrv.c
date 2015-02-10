@@ -142,12 +142,12 @@ void mumps_solve(char *filename_mat, char *filename_rhs, int sym) {
     id.ICNTL(4) = 2; // HOX! Change this when ready!!
 
     //If sym==0, MATIS hangs the solver!
-    //if (sym ==0) {
+    if (sym ==0) {
         id.ICNTL(7) = 0;
-    //}
-    //else {
-    //    id.ICNTL(7) = 7;
-    //}
+    }
+    else {
+        id.ICNTL(7) = 7;
+    }
 
     //id.ICNTL(28) = 2;
     //id.ICNTL(29) = 2;
@@ -177,15 +177,10 @@ void mumps_solve(char *filename_mat, char *filename_rhs, int sym) {
 
 void mumps_diagonal(char *filename_mat, int sym) {
 
-    //printf("mumps_diag got arguments: %s, %d\n",filename_mat,sym);
 
     spmatrix mat;
 
-
-
     mat = readSpMatrixFromFile(filename_mat);
-
-
 
     DMUMPS_STRUC_C id;
 
@@ -198,7 +193,6 @@ void mumps_diagonal(char *filename_mat, int sym) {
     id.sym = sym;
     id.comm_fortran = USE_COMM_WORLD;
     dmumps_c(&id);
-
 
     int *ivec = malloc(mat.n * sizeof(int));
     int *pvec = malloc((mat.n + 1) * sizeof(int));
@@ -233,14 +227,14 @@ void mumps_diagonal(char *filename_mat, int sym) {
     id.ICNTL(4) = 2; // HOX! Change this when ready!!
 
     //If sym==0, MATIS hangs the solver!
-    //if (sym ==0) {
+    if (sym ==0) {
         id.ICNTL(7) = 0;
-    //}
-    //else {
-    //    id.ICNTL(7) = 7;
-    //}
+    }
+    else {
+        id.ICNTL(7) = 7;
+    }
 
-    // Calculating inverse matrix elements
+    // Calculate inverse matrix elements
     id.ICNTL(30) = 1;
 
     id.job = 6;

@@ -1,5 +1,5 @@
 # Package: rmumps
-# Simple (at the time being) R interface to MUMPS
+# Simple (for the time being) R interface to MUMPS
 # Uses binary files and a executable MUMPS driver 
 
 
@@ -29,6 +29,7 @@ save.sp.matrix <- function(mat,filename) {
 }
 
 
+# Saves dense matrix to file
 save.dense.RHS <- function(data,filename) {
     data <- as.matrix(data)
     dd <- dim(data)
@@ -45,6 +46,7 @@ save.dense.RHS <- function(data,filename) {
 }
 
 
+# Reads dense matrix from file
 read.dense.RHS <- function(filename) {
 
     fid <- file(filename,"rb")
@@ -62,6 +64,16 @@ read.dense.RHS <- function(filename) {
 }
 
 
+#######
+# Main solve function
+#
+# Arguments:
+#   mat     sparse matrix of class dgCMatrix or dtCMatrix
+#   rhs     right hans side of the equation. Matrix or vector. Will be
+#           saved as dense matrix.
+#   np      Number of cores to be used in the calculation
+#   sym     0 for non-symmetric, 1 for positive definite, 2 for
+#           general symmetric
 mumps.solve <- function(mat,rhs,np = 4,sym = 0) {
 
     # Check matrix class
