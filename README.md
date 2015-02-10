@@ -5,26 +5,31 @@ Written by Mikko Orispaa (mikko.orispaa@gmail.com)
 
 ## History
 
-- Started on 4-Feb-2015
+2015-02-04
+- Development started
+
+2015-02-09
+- Ability to solve unsymmetric and symmetric systems
+- Ability to have (dense) matrix right hand side
+- tagged as version 0.2.
 
 
 
 
 
-
-## Roadmap
+## Roadmap (Delete before release)
 
 ### Version 0.1
-- basic function
-- able to solve symmetric sparse equations with ONE (dense) RHS
++ basic function
++ able to solve symmetric sparse equations with ONE (dense) RHS
 
 ### Version 0.2
 - Able to calculate elements of A^{-1}
-- Able to solve systems with multiple (matrix) RHS
++ Able to solve systems with multiple (matrix) RHS
 
 ### Version 0.3
 - Use of MUMPS parameters
-- Able to solve general sparse systems
++ Able to solve general sparse systems
 
 ### Version 0.4
 - able to solve systems with sparse matrix RHS
