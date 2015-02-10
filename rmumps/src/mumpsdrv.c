@@ -28,7 +28,13 @@ typedef struct denserhs_ {
     double *data;
 } denserhs;
 
-
+typedef struct sparserhs_ {
+    int nz;
+    int n;
+    int *i;
+    int *p;
+    double *data;
+} sparserhs;
 
 
 
@@ -95,32 +101,22 @@ void writeDenseRHStoFile(denserhs data, char *filename) {
 
 
 
-
-int main(int argc, char *argv[]) {
+void mumps_solve(char *filename_mat, char *filename_rhs, int sym) {
 
     spmatrix mat;
     denserhs rhs;
-    char *filename_mat, *filename_rhs;
 
-    filename_mat = argv[1];
-    filename_rhs = argv[2];
-    int sym = atoi(argv[3]);
 
-//    printf("Parameters:\n %s\n %s\n %d   \n\n\n",filename_mat,filename_rhs,sym);
 
     mat = readSpMatrixFromFile(filename_mat);
     rhs = readDenseRHSFromFile(filename_rhs);
 
-    //printf("mat: %f %f %f %f\n",mat.a[0],mat.a[1],mat.a[2],mat.a[3]);
-    //printf("rhs: %f %f %f %f\n\n",rhs.data[0],rhs.data[1],rhs.data[2],rhs.data[3]);
-//    printf("mat: %d %d\n",mat.n,mat.nz);
-//    printf("rhs: %d %d\n",rhs.lrhs,rhs.nrhs);
 
 
     DMUMPS_STRUC_C id;
 
     int myid, ierr;
-    ierr = MPI_Init(&argc,&argv);
+    //ierr = MPI_Init(&argc,&argv);
     ierr = MPI_Comm_rank(MPI_COMM_WORLD, &myid);
 
     id.job = JOB_INIT;
@@ -145,8 +141,14 @@ int main(int argc, char *argv[]) {
     //id.ICNTL(3) = -1;
     id.ICNTL(4) = 2; // HOX! Change this when ready!!
 
+    //If sym==0, MATIS hangs the solver!
+    //if (sym ==0) {
+        id.ICNTL(7) = 0;
+    //}
+    //else {
+    //    id.ICNTL(7) = 7;
+    //}
 
-    id.ICNTL(7) = 0;
     //id.ICNTL(28) = 2;
     //id.ICNTL(29) = 2;
 
@@ -168,6 +170,149 @@ int main(int argc, char *argv[]) {
 
     id.job = JOB_END;
     dmumps_c(&id);
+
+    //MPI_Finalize();
+
+}
+
+void mumps_diagonal(char *filename_mat, int sym) {
+
+    //printf("mumps_diag got arguments: %s, %d\n",filename_mat,sym);
+
+    spmatrix mat;
+
+
+
+    mat = readSpMatrixFromFile(filename_mat);
+
+
+
+    DMUMPS_STRUC_C id;
+
+    int myid, ierr;
+    //ierr = MPI_Init(&argc,&argv);
+    ierr = MPI_Comm_rank(MPI_COMM_WORLD, &myid);
+
+    id.job = JOB_INIT;
+    id.par = 1;
+    id.sym = sym;
+    id.comm_fortran = USE_COMM_WORLD;
+    dmumps_c(&id);
+
+
+    int *ivec = malloc(mat.n * sizeof(int));
+    int *pvec = malloc((mat.n + 1) * sizeof(int));
+    double *dummyvec = malloc(mat.n * sizeof(double));
+    int i;
+
+    if (myid == 0) {
+
+        // Construct sparse rhs representing the diagonal
+        for (i = 0; i < mat.n ; i++) {
+            ivec[i] = i+1;
+            pvec[i] = i+1;
+        }
+        pvec[mat.n] = mat.n+1;
+
+        id.n = mat.n;
+        id.nz = mat.nz;
+        id.irn = mat.irn;
+        id.jcn = mat.jcn;
+        id.a = mat.a;
+        id.nz_rhs = mat.n;
+        id.nrhs = mat.n;
+        id.rhs_sparse = dummyvec;
+        id.irhs_sparse = ivec;
+        id.irhs_ptr = pvec;
+    }
+    
+
+    //id.ICNTL(1) = -1;
+    //id.ICNTL(2) = -1;
+    //id.ICNTL(3) = -1;
+    id.ICNTL(4) = 2; // HOX! Change this when ready!!
+
+    //If sym==0, MATIS hangs the solver!
+    //if (sym ==0) {
+        id.ICNTL(7) = 0;
+    //}
+    //else {
+    //    id.ICNTL(7) = 7;
+    //}
+
+    // Calculating inverse matrix elements
+    id.ICNTL(30) = 1;
+
+    id.job = 6;
+    dmumps_c(&id);
+
+
+    if (myid==0) {
+        // Get the solution
+        int j;
+        for ( j = 0 ; j < mat.n ; j++) {
+            dummyvec[j] = id.rhs_sparse[j];
+        }
+
+        // Save diagonal to file
+        FILE *fid = fopen("mumps_diag.bin","wb");
+
+        fwrite(&mat.n,sizeof(int),1,fid);
+        fwrite(dummyvec,sizeof(double),mat.n,fid);
+        fclose(fid);
+    }
+
+
+    id.job = JOB_END;
+    dmumps_c(&id);
+}
+
+
+// Main routine
+// Modes:
+//  0 normal solve
+//  1 calculate inverse matrix diagonal
+//  2 calculate inverse matrix elements
+//
+int main(int argc, char *argv[]) {
+
+
+    // Process arguments
+    // First argument is the mode
+    int mode = atoi(argv[1]);
+
+    //char *filename_mat, *filename_rhs;
+    //int sym;
+
+    int ierr;
+    ierr = MPI_Init(&argc,&argv);
+
+    // Process remaining arguments based on mode
+    switch(mode) 
+    {
+        case 0 :
+            //char *filename_mat, *filename_rhs;
+            //int sym;
+            //filename_mat = argv[2];
+            //filename_rhs = argv[3];
+            //sym = atoi(argv[4]);
+            
+            mumps_solve(argv[2],argv[3],atoi(argv[4]));
+            break;
+
+        case 1 :
+            //filename_mat = argv[2];
+            //sym = atoi(argv[3]);
+        printf("Mode 1 starting...\n");
+            mumps_diagonal(argv[2],atoi(argv[3]));
+            break;
+
+        case 2 :
+
+        default :
+            printf("Mode not implemented\n");
+            exit(1);
+    }
 
     MPI_Finalize();
 

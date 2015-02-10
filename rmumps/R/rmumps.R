@@ -82,9 +82,9 @@ mumps.solve <- function(mat,rhs,np = 4,sym = 0) {
     # Run MUMPS
 
     # Construct command 
-    # In this version sym=2 (general symmetric)
+    mode <- 0
     cmd.path <- paste0(system.file(package="rmumps"),"/bin/mumpsdrv")
-    command <- paste("mpirun","-np",np,cmd.path,"mumps_mat.bin","mumps_rhs.bin",sym,sep=' ')
+    command <- paste("mpirun","-np",np,cmd.path,mode,"mumps_mat.bin","mumps_rhs.bin",sym,sep=' ')
     # Execute command
     #cat(command,'\n')
     system(command)
@@ -100,4 +100,44 @@ mumps.solve <- function(mat,rhs,np = 4,sym = 0) {
 
     # Return solution
     return(sol)
+}
+
+mumps.calc.inverse.diagonal <- function(mat,np = 4, sym = 0) {
+    # Check matrix class
+    if (class(mat) != "dgCMatrix" && class(mat) !="dtCMatrix")
+        stop("Matrix mat must be of class 'dgCMatrix' or 'dtCMatrix'")
+
+    # If solving symmetric problem and matrix is given in dgCMatrix,
+    # transform it into dtCMatrix format
+    if ( sym > 0 && class(mat) == "dgCMatrix" ) {
+        mat <- tril(mat)
+    }
+
+
+    # Write matrix and rhs to file
+    save.sp.matrix(mat,"mumps_mat.bin")
+
+    # Construct command 
+    mode <- 1
+    cmd.path <- paste0(system.file(package="rmumps"),"/bin/mumpsdrv")
+    command <- paste("mpirun","-np",np,cmd.path,mode,"mumps_mat.bin",sym,sep=' ')
+    # Execute command
+    #cat(command,'\n')
+    system(command)
+
+    # Read diagonal values
+    fid <- file("mumps_diag.bin","rb")
+    
+    n <- readBin(fid,integer(),1,size=4)
+
+    res <- readBin(fid,numeric(),n,size=8)
+
+    close(fid)
+
+    file.remove("mumps_mat.bin")
+    file.remove("mumps_diag.bin")
+
+    return(res)
+
+
 }
