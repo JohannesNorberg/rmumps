@@ -45,6 +45,20 @@ save.dense.RHS <- function(data,filename) {
     close(fid)
 }
 
+save.elem.sp.matrix <- function(mat,filename) {
+    fid <- file(filename,"wb")
+
+    n <- ncol(mat)
+    nz <- length(mat@x)
+cat('n:',n,'\nnz:',nz,'\n')
+    writeBin(as.integer(nz),fid,size=4)
+    writeBin(as.integer(n),fid,size=4)
+    writeBin(as.integer(mat@i+1),fid,size=4)
+    writeBin(as.integer(mat@p+1),fid,size=4)
+    writeBin(as.double(mat@x),fid,size=8)
+
+    close(fid)
+}
 
 # Reads dense matrix from file
 read.dense.RHS <- function(filename) {
@@ -61,6 +75,25 @@ read.dense.RHS <- function(filename) {
     close(fid)
 
     return(res)
+}
+
+
+read.elem.sp.matrix <- function(filename) {
+    fid <- file(filename,"rb")
+
+    nz <- readBin(fid,integer(),n=1,size=4)
+    n <- readBin(fid,integer(),n=1,size=4)
+    i <- readBin(fid,integer(),n=nz,size=4)
+    p <- readBin(fid,integer(),n=n+1,size=4)
+    x <- readBin(fid,numeric(),n=nz,size=8)
+
+    close(fid)
+
+    j <- rep(seq_along(diff(p)),diff(p))
+
+    mat <- sparseMatrix(i=i,j=j,x=x,dims=c(n,n))
+    
+    return(mat)
 }
 
 
@@ -152,4 +185,50 @@ mumps.calc.inverse.diagonal <- function(mat,np = 4, sym = 0) {
     return(res)
 
 
+}
+
+
+mumps.calc.inverse.elements <- function(mat,mask,np = 4,sym = 0) {
+    # Check matrix class
+    if (class(mat) != "dgCMatrix" && class(mat) !="dtCMatrix")
+        stop("Matrix mat must be of class 'dgCMatrix' or 'dtCMatrix'")
+    # Convert mask into dgCMatrix class
+    # NB: This is not perfect! Currently supporting only matrices that
+    # can be coerced to dgCMatrix class
+    mask <- tryCatch({
+        as(mask,'dgCMatrix')
+    },
+    error= function(cond) {
+        message("Mask matrix could not be coerced to 'dgCMatrix'")
+        message("Try doing it manually before using mumps.calc.diag.elements. Exiting!")
+        retun(NA)
+    })
+
+    # If solving symmetric problem and matrix is given in dgCMatrix,
+    # transform it into dtCMatrix format
+    if ( sym > 0 && class(mat) == "dgCMatrix" ) {
+        mat <- tril(mat)
+    }
+
+
+    # Write mat and mask to files
+    save.sp.matrix(mat,"mumps_mat.bin")
+
+    # Write mask to file
+    save.elem.sp.matrix(mask,"mumps_mask.bin")
+
+    # Run MUMPS
+    # Construct command 
+    mode <- 2
+    cmd.path <- paste0(system.file(package="rmumps"),"/bin/mumpsdrv")
+    command <- paste("mpirun","-np",np,cmd.path,mode,"mumps_mat.bin","mumps_mask.bin",sym,sep=' ')
+    # Execute command
+    #cat(command,'\n')
+    system(command)
+
+    # Read inverse matrix elements
+    res <- read.elem.sp.matrix("mumps_mask.bin")
+
+    # Return dgCMatrix containing the inverse matrix elements
+    return(res)
 }
