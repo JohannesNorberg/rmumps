@@ -7,6 +7,7 @@ Copyright (c) 2015, Mikko Orispaa
 Licensed under MIT License. See file LICENSE for details.
 
 **MUMPS stands for a MUltifrontal Massively Parallel sparse direct Solver.**
+
 For details, see: http://mumps.enseeiht.fr
 
 ## History
