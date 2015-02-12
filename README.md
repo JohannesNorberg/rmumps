@@ -1,7 +1,9 @@
 # RMUMPS - R Interface for MUMPS
 
 Written by Mikko Orispaa (mikko.orispaa@gmail.com)
+
 Copyright (c) 2015, Mikko Orispaa
+
 Licensed under MIT License. See file LICENSE for details.
 
 ## History
