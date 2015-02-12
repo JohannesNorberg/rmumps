@@ -1,7 +1,8 @@
 # RMUMPS - R Interface for MUMPS
 
 Written by Mikko Orispaa (mikko.orispaa@gmail.com)
-(c) 2015, Mikko Orispaa
+Copyright (c) 2015, Mikko Orispaa
+Licensed under MIT License. See file LICENSE for details.
 
 ## History
 
@@ -19,25 +20,14 @@ Written by Mikko Orispaa (mikko.orispaa@gmail.com)
   (MATIS problem)
 - tagged as 0.2-1
 
+2015-02-12
+- Ability to calculate arbitrary inverse matrix elements.
 
 
-## Roadmap (Delete before release)
 
-### Version 0.1
-+ basic function
-+ able to solve symmetric sparse equations with ONE (dense) RHS
 
-### Version 0.2
-+ Able to solve systems with multiple (matrix) RHS
+## INSTALLATION
 
-### Version 0.4
-- Able to calculate elements of A^{-1}
-- Use of MUMPS parameters
-+ Able to solve general sparse systems
+You need MUMPS libraries installed to use rmumps package.
 
-### Version 0.6
-- able to solve systems with sparse matrix RHS
-
-### Version 1.0
-- documentation added
-- INSTALL file with installation instructions written
+Write instructions for installing MUMPS here...
