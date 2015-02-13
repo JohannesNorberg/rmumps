@@ -49,7 +49,7 @@ It is also possible to download the source code from MUMPS webpage (http://mumps
 
 ## INSTALLATION OF RMUMPS
 
-The rmumps package assumes that the MUMPS libraries are either in /opt/local/lib or 
+The rmumps package assumes that the MUMPS libraries are either in /opt/local/lib or somewhere else where mpicc compiler can find them. If this is not the case, you need to modify the file src/Makefile by changing the variables IDIR and LDIR to point to the installation path of MUMPS.
 
 
 ## History
