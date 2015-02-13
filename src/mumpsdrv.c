@@ -13,7 +13,7 @@
 
 
 
-
+// Centralized assembled matrix
 typedef struct spmatrix_ {
     int n;
     int nz;
@@ -22,12 +22,14 @@ typedef struct spmatrix_ {
     double *a;
 } spmatrix;
 
+// Centralized dense right-hand side matrix
 typedef struct densematrix_ {
     int nrhs;
     int lrhs;
     double *data;
 } densematrix;
 
+// Sparse right-hand side matrix
 typedef struct elemspmatrix_ {
     int nz;
     int n;
@@ -85,6 +87,7 @@ densematrix readDenseMatrixFromFile(char *filename){
     return mat;
 }
 
+
 elemspmatrix readElemSpMatrixFromFile(char *filename) {
     FILE *fid = fopen(filename,"rb");
     elemspmatrix mat;
@@ -92,8 +95,6 @@ elemspmatrix readElemSpMatrixFromFile(char *filename) {
     // Read
     fread(&mat.nz,sizeof(int),1,fid);
     fread(&mat.n,sizeof(int),1,fid);
-
-printf("nz: %d\nn: %d\n",mat.nz,mat.n);
 
     mat.i = malloc(mat.nz * sizeof(int));
     mat.p = malloc((mat.n+1) * sizeof(int));
@@ -116,13 +117,14 @@ void writeDenseMatrixToFile(densematrix data, char *filename) {
 
     fwrite(&data.lrhs,sizeof(int),1,fid);
     fwrite(&data.nrhs,sizeof(int),1,fid);
-
     fwrite(data.data,sizeof(double),data.nrhs*data.lrhs,fid);
 
     fclose(fid);
 }
 
+
 void writeElemSpMatrixToFile(elemspmatrix mat, char *filename) {
+
     FILE *fid = fopen(filename,"wb");
 
     fwrite(&mat.nz,sizeof(int),1,fid);
@@ -135,23 +137,18 @@ void writeElemSpMatrixToFile(elemspmatrix mat, char *filename) {
 }
 
 
-
 void mumps_solve(char *filename_mat, char *filename_rhs, int sym) {
 
     spmatrix mat;
     densematrix rhs;
 
-
-
     mat = readSpMatrixFromFile(filename_mat);
     rhs = readDenseMatrixFromFile(filename_rhs);
-
-
 
     DMUMPS_STRUC_C id;
 
     int myid, ierr;
-    //ierr = MPI_Init(&argc,&argv);
+    
     ierr = MPI_Comm_rank(MPI_COMM_WORLD, &myid);
 
     id.job = JOB_INIT;
@@ -171,21 +168,16 @@ void mumps_solve(char *filename_mat, char *filename_rhs, int sym) {
         id.rhs = rhs.data;
     }
 
-    //id.ICNTL(1) = -1;
-    //id.ICNTL(2) = -1;
-    //id.ICNTL(3) = -1;
-    id.ICNTL(4) = 2; // HOX! Change this when ready!!
+    id.ICNTL(3) = -1;
+    id.ICNTL(4) = 1;
 
-    //If sym==0, MATIS hangs the solver!
+    //If sym==0, MATIS hangs the solver (in OSX)!
     if (sym ==0) {
         id.ICNTL(7) = 0;
     }
     else {
         id.ICNTL(7) = 7;
     }
-
-    //id.ICNTL(28) = 2;
-    //id.ICNTL(29) = 2;
 
     id.job = 6;
     dmumps_c(&id);
@@ -206,12 +198,10 @@ void mumps_solve(char *filename_mat, char *filename_rhs, int sym) {
     id.job = JOB_END;
     dmumps_c(&id);
 
-    //MPI_Finalize();
-
 }
 
-void mumps_diagonal(char *filename_mat, int sym) {
 
+void mumps_diagonal(char *filename_mat, int sym) {
 
     spmatrix mat;
 
@@ -220,7 +210,7 @@ void mumps_diagonal(char *filename_mat, int sym) {
     DMUMPS_STRUC_C id;
 
     int myid, ierr;
-    //ierr = MPI_Init(&argc,&argv);
+    
     ierr = MPI_Comm_rank(MPI_COMM_WORLD, &myid);
 
     id.job = JOB_INIT;
@@ -256,10 +246,8 @@ void mumps_diagonal(char *filename_mat, int sym) {
     }
     
 
-    //id.ICNTL(1) = -1;
-    //id.ICNTL(2) = -1;
-    //id.ICNTL(3) = -1;
-    id.ICNTL(4) = 2; // HOX! Change this when ready!!
+    id.ICNTL(3) = -1;
+    id.ICNTL(4) = 1; 
 
     //If sym==0, MATIS hangs the solver!
     if (sym ==0) {
@@ -275,7 +263,6 @@ void mumps_diagonal(char *filename_mat, int sym) {
     id.job = 6;
     dmumps_c(&id);
 
-
     if (myid==0) {
         // Get the solution
         int j;
@@ -290,7 +277,6 @@ void mumps_diagonal(char *filename_mat, int sym) {
         fwrite(dummyvec,sizeof(double),mat.n,fid);
         fclose(fid);
     }
-
 
     id.job = JOB_END;
     dmumps_c(&id);
@@ -310,7 +296,7 @@ void mumps_elements(char *filename_mat, char *filename_mask, int sym) {
 
     int i;
     int myid, ierr;
-    //ierr = MPI_Init(&argc,&argv);
+    
     ierr = MPI_Comm_rank(MPI_COMM_WORLD, &myid);
 
     id.job = JOB_INIT;
@@ -319,19 +305,8 @@ void mumps_elements(char *filename_mat, char *filename_mask, int sym) {
     id.comm_fortran = USE_COMM_WORLD;
     dmumps_c(&id);
 
-//    int *ivec = malloc(mat.n * sizeof(int));
-//    int *pvec = malloc((mat.n + 1) * sizeof(int));
-//    double *dummyvec = malloc(mat.n * sizeof(double));
 
     if (myid == 0) {
-
-        // Construct sparse rhs representing the diagonal
-        //for (i = 0; i < mat.n ; i++) {
-        //    ivec[i] = i+1;
-        //    pvec[i] = i+1;
-        //}
-        //pvec[mat.n] = mat.n+1;
-
         id.n = mat.n;
         id.nz = mat.nz;
         id.irn = mat.irn;
@@ -345,10 +320,8 @@ void mumps_elements(char *filename_mat, char *filename_mask, int sym) {
     }
     
 
-    //id.ICNTL(1) = -1;
-    //id.ICNTL(2) = -1;
-    //id.ICNTL(3) = -1;
-    id.ICNTL(4) = 2; // HOX! Change this when ready!!
+    id.ICNTL(3) = -1;
+    id.ICNTL(4) = 1;
 
     //If sym==0, MATIS hangs the solver!
     if (sym ==0) {
@@ -364,7 +337,6 @@ void mumps_elements(char *filename_mat, char *filename_mask, int sym) {
     id.job = 6;
     dmumps_c(&id);
 
-
     if (myid==0) {
         // Get the solution
         int j;
@@ -374,13 +346,7 @@ void mumps_elements(char *filename_mat, char *filename_mask, int sym) {
 
         // Save diagonal to file
         writeElemSpMatrixToFile(mask,filename_mask);
-        //FILE *fid = fopen("mumps_diag.bin","wb");
-
-        //fwrite(&mat.n,sizeof(int),1,fid);
-        //fwrite(dummyvec,sizeof(double),mat.n,fid);
-        //fclose(fid);
     }
-
 
     id.job = JOB_END;
     dmumps_c(&id);
@@ -397,13 +363,9 @@ void mumps_elements(char *filename_mat, char *filename_mask, int sym) {
 //
 int main(int argc, char *argv[]) {
 
-
     // Process arguments
     // First argument is the mode
     int mode = atoi(argv[1]);
-
-    //char *filename_mat, *filename_rhs;
-    //int sym;
 
     int ierr;
     ierr = MPI_Init(&argc,&argv);
@@ -412,22 +374,11 @@ int main(int argc, char *argv[]) {
     switch(mode) 
     {
         case 0 :
-            //char *filename_mat, *filename_rhs;
-            //int sym;
-            //filename_mat = argv[2];
-            //filename_rhs = argv[3];
-            //sym = atoi(argv[4]);
-            
             mumps_solve(argv[2],argv[3],atoi(argv[4]));
             break;
-
         case 1 :
-            //filename_mat = argv[2];
-            //sym = atoi(argv[3]);
-        printf("Mode 1 starting...\n");
             mumps_diagonal(argv[2],atoi(argv[3]));
             break;
-
         case 2 :
             mumps_elements(argv[2],argv[3],atoi(argv[4]));
             break;
@@ -437,7 +388,5 @@ int main(int argc, char *argv[]) {
     }
 
     MPI_Finalize();
-
     return 0;
-
 }
