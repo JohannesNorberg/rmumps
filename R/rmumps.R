@@ -3,6 +3,24 @@
 # Uses binary files and a executable MUMPS driver 
 
 
+# Function to write long (over 2^31 bytes) vectors to file
+# using writeBin
+write.vec.to.file <- function(con,data,type.fun,size){
+    chunk <- 1024*1024
+    ll <- length(data)
+
+    loops <- ll%/%chunk
+    remainder <- ll%%chunk
+
+    if (loops > 0) {
+        for ( i in 0:(loops-1)) {
+            writeBin(object=type.fun(data[i*chunk + 1:chunk ]),con=con,size=size)
+        }
+    }
+    writeBin(object=type.fun(data[loops*chunk + 1:remainder]),con=con,size=size)
+}
+
+
 # Saves sparse matrix to binary file
 save.sp.matrix <- function(mat,filename) {
 
@@ -13,17 +31,22 @@ save.sp.matrix <- function(mat,filename) {
     nz <- length(mat@x)
 
     # save n
-    writeBin(as.integer(n),fid,size = 4)
+    #writeBin(as.integer(n),fid,size = 4)
+    write.vec.to.file(fid,n,as.integer,4)
     # save nz
-    writeBin(as.integer(nz),fid,size = 4)
+    #writeBin(as.integer(nz),fid,size = 4)
+    write.vec.to.file(fid,nz,as.integer,4)
     # save i
     ii <- mat@i + 1
-    writeBin(as.integer(ii),fid,size=4)
+    #writeBin(as.integer(ii),fid,size=4)
+    write.vec.to.file(fid,ii,as.integer,4)
     # save j
     jj <- rep(seq_along(diff(mat@p)),diff(mat@p))
-    writeBin(as.integer(jj),fid,size=4)
+    #writeBin(as.integer(jj),fid,size=4)
+    write.vec.to.file(fid,jj,as.integer,4)
     # save x
-    writeBin(as.double(mat@x),fid,size=8)
+    #writeBin(as.double(mat@x),fid,size=8)
+    write.vec.to.file(fid,mat@x,as.double,8)
 
     close(fid)
 }
@@ -107,7 +130,7 @@ read.elem.sp.matrix <- function(filename) {
 #   np      Number of cores to be used in the calculation
 #   sym     0 for non-symmetric, 1 for positive definite, 2 for
 #           general symmetric
-mumps.solve <- function(mat,rhs,np = 4,sym = 0) {
+mumps.solve <- function(mat,rhs,sym = 0,np = detectCores()) {
 
     # Check matrix class
     if (class(mat) != "dgCMatrix" && class(mat) !="dtCMatrix")
@@ -147,7 +170,7 @@ mumps.solve <- function(mat,rhs,np = 4,sym = 0) {
     return(sol)
 }
 
-mumps.calc.inverse.diagonal <- function(mat,np = 4, sym = 0) {
+mumps.calc.inverse.diagonal <- function(mat,sym = 0,np = detectCores()) {
     # Check matrix class
     if (class(mat) != "dgCMatrix" && class(mat) !="dtCMatrix")
         stop("Matrix mat must be of class 'dgCMatrix' or 'dtCMatrix'")
@@ -188,7 +211,7 @@ mumps.calc.inverse.diagonal <- function(mat,np = 4, sym = 0) {
 }
 
 
-mumps.calc.inverse.elements <- function(mat,mask,np = 4,sym = 0) {
+mumps.calc.inverse.elements <- function(mat,mask,sym = 0,np = detectCores()) {
     # Check matrix class
     if (class(mat) != "dgCMatrix" && class(mat) !="dtCMatrix")
         stop("Matrix mat must be of class 'dgCMatrix' or 'dtCMatrix'")
@@ -201,7 +224,7 @@ mumps.calc.inverse.elements <- function(mat,mask,np = 4,sym = 0) {
     error= function(cond) {
         message("Mask matrix could not be coerced to 'dgCMatrix'")
         message("Try doing it manually before using mumps.calc.diag.elements. Exiting!")
-        retun(NA)
+        return(NA)
     })
 
     # If solving symmetric problem and matrix is given in dgCMatrix,
@@ -228,6 +251,10 @@ mumps.calc.inverse.elements <- function(mat,mask,np = 4,sym = 0) {
 
     # Read inverse matrix elements
     res <- read.elem.sp.matrix("mumps_mask.bin")
+
+    # Delete temp files
+    file.remove("mumps_mat.bin")
+    file.remove("mumps_masmaskk.bin")
 
     # Return dgCMatrix containing the inverse matrix elements
     return(res)

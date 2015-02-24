@@ -7,6 +7,11 @@ Copyright (c) 2015, Mikko Orispaa
 Licensed under MIT License. See file LICENSE for details.
 
 
+## RMUMPS
+
+RMUMPS is a simple non-sophisticated R interface for MUMPS library. It uses binary files to transmit data between R and a external MUMPS driver program which is included in the R package. To install rmumps, MUMPS libraries and a working MPI installation (with mpicc and mpirun) are required.
+
+
 ## MUMPS (MUltifrontal Massively Parallel sparse direct Solver)
 
 MUMPS is a public domain parallel sparse solver based on public domain software eveloped during the Esprit IV European project PARASOL (1996-1999).
@@ -70,3 +75,7 @@ The rmumps package assumes that the MUMPS libraries are either in /opt/local/lib
 
 2015-02-12
 - Ability to calculate arbitrary inverse matrix elements.
+
+2015-02-24
+- Fixed a bug that prevented using sparse matrices with over 2^28 non-zero element (writeBin can
+  not handle data chunks larger than 2^31 bytes)

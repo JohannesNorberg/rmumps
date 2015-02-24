@@ -1,3 +1,4 @@
 import(Matrix)
+importFrom(parallel,detectCores)
 
 exportPattern('^mumps.')
