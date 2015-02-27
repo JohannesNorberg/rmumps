@@ -137,7 +137,7 @@ void writeElemSpMatrixToFile(elemspmatrix mat, char *filename) {
 }
 
 
-void mumps_solve(char *filename_mat, char *filename_rhs, int sym) {
+void mumps_solve(char *filename_mat, char *filename_rhs, int sym, int par, int p4, int p7, int p22 ) {
 
     spmatrix mat;
     densematrix rhs;
@@ -152,7 +152,7 @@ void mumps_solve(char *filename_mat, char *filename_rhs, int sym) {
     ierr = MPI_Comm_rank(MPI_COMM_WORLD, &myid);
 
     id.job = JOB_INIT;
-    id.par = 1;
+    id.par = par;
     id.sym = sym;
     id.comm_fortran = USE_COMM_WORLD;
     dmumps_c(&id);
@@ -167,17 +167,29 @@ void mumps_solve(char *filename_mat, char *filename_rhs, int sym) {
         id.lrhs = rhs.lrhs;
         id.rhs = rhs.data;
     }
-
-    id.ICNTL(3) = -1;
-    id.ICNTL(4) = 1;
+    if (p4 > 0){ 
+        //id.ICNTL(2) = 6;
+        //id.ICNTL(3) = 0;
+        id.ICNTL(4) = p4;
+    }
+    else {
+        id.ICNTL(2) = -1;
+        id.ICNTL(3) = -1;
+        id.ICNTL(4) = p4;
+    }
 
     //If sym==0, MATIS hangs the solver (in OSX)!
+    /*
     if (sym ==0) {
         id.ICNTL(7) = 0;
     }
     else {
-        id.ICNTL(7) = 7;
+        id.ICNTL(7) = 0;
     }
+    */
+    id.ICNTL(7) = p7;
+
+    id.ICNTL(22) = p22;
 
     id.job = 6;
     dmumps_c(&id);
@@ -374,7 +386,7 @@ int main(int argc, char *argv[]) {
     switch(mode) 
     {
         case 0 :
-            mumps_solve(argv[2],argv[3],atoi(argv[4]));
+            mumps_solve(argv[2],argv[3],atoi(argv[4]),atoi(argv[5]),atoi(argv[6]),atoi(argv[7]),atoi(argv[8]));
             break;
         case 1 :
             mumps_diagonal(argv[2],atoi(argv[3]));
