@@ -130,8 +130,14 @@ read.elem.sp.matrix <- function(filename) {
 #   np      Number of cores to be used in the calculation
 #   sym     0 for non-symmetric, 1 for positive definite, 2 for
 #           general symmetric
-mumps.solve <- function(mat,rhs,sym = 0,np = detectCores()) {
+mumps.solve <- function(mat,rhs,sym = 0,np = detectCores(),
+                        host.involved=1,
+                        messages=0,
+                        pivot.order=0,
+                        out.of.core=0) {
 
+    #cat('Checking matrix...')
+    t0 <- proc.time()
     # Check matrix class
     if (class(mat) != "dgCMatrix" && class(mat) !="dtCMatrix")
         stop("Matrix mat must be of class 'dgCMatrix' or 'dtCMatrix'")
@@ -141,18 +147,33 @@ mumps.solve <- function(mat,rhs,sym = 0,np = detectCores()) {
     if ( sym > 0 && class(mat) == "dgCMatrix" ) {
         mat <- tril(mat)
     }
+    t1 <- proc.time()
+    #cat('DONE! Time:',as.numeric(t1-t0)[3],'\n')
+
 
 
     # Write matrix and rhs to file
+    #cat('Writing data to file...')
+    t0 <- proc.time()
     save.sp.matrix(mat,"mumps_mat.bin")
     save.dense.RHS(rhs,"mumps_rhs.bin")
+    t1 <- proc.time()
+
 
     # Run MUMPS
 
     # Construct command 
     mode <- 0
     cmd.path <- paste0(system.file(package="rmumps"),"/bin/mumpsdrv")
-    command <- paste("mpirun","-np",np,cmd.path,mode,"mumps_mat.bin","mumps_rhs.bin",sym,sep=' ')
+    command <- paste("mpirun","-np",np,cmd.path,mode,
+                     "mumps_mat.bin",
+                     "mumps_rhs.bin",
+                     sym,
+                     host.involved,
+                     messages,
+                     pivot.order,
+                     out.of.core,
+                     sep=' ')
     # Execute command
     #cat(command,'\n')
     system(command)
