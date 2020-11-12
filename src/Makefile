@@ -11,4 +11,5 @@ all: build
 
 
 build: mumpsdrv.c
-	$(MPICC) -cc=gcc mumpsdrv.c -o mumpsdrv $(LIBS) $(CFLAGS)
+	#$(MPICC) -cc=gcc mumpsdrv.c -o mumpsdrv $(LIBS) $(CFLAGS)
+	$(MPICC) mumpsdrv.c -o mumpsdrv $(LIBS) $(CFLAGS)

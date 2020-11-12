@@ -275,7 +275,7 @@ mumps.calc.inverse.elements <- function(mat,mask,sym = 0,np = detectCores()) {
 
     # Delete temp files
     file.remove("mumps_mat.bin")
-    file.remove("mumps_masmaskk.bin")
+    file.remove("mumps_mask.bin")
 
     # Return dgCMatrix containing the inverse matrix elements
     return(res)
