@@ -7,4 +7,4 @@ Maintainer: Mikko Orispaa <mikko.orispaa@gmail.com>
 Depends: R (>= 3.0.0), Matrix, parallel
 Description: Simple R interface for MUMPS using binary data files to
     transport the data between MUMPS driver and R.
-License: MIT + file LICENSE
+License: Apache 2.0
