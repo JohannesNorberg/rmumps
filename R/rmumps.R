@@ -5,21 +5,25 @@
 
 # Function to write long (over 2^31 bytes) vectors to file
 # using writeBin
-write.vec.to.file <- function(con,data,type.fun,size){
-    chunk <- 1024*1024
-    ll <- length(data)
+write.vec.to.file <- function(con, data, type.fun, size) {
+  chunk <- 1024L * 1024L
+  ll    <- length(data)
 
-    loops <- ll%/%chunk
-    remainder <- ll%%chunk
+  loops     <- ll %/% chunk
+  remainder <- ll %%  chunk
 
-    if (loops > 0) {
-        for ( i in 0:(loops-1)) {
-            writeBin(object=type.fun(data[i*chunk + 1:chunk ]),con=con,size=size)
-        }
+  if (loops > 0L) {
+    for (i in 0L:(loops - 1L)) {
+      idx <- (i * chunk + 1L):(i * chunk + chunk)   # fixed precedence
+      writeBin(object = type.fun(data[idx]), con = con, size = size)
     }
-    writeBin(object=type.fun(data[loops*chunk + 1:remainder]),con=con,size=size)
-}
+  }
 
+  if (remainder > 0L) {                              # guard remainder==0
+    idx <- (loops * chunk + 1L):(loops * chunk + remainder)
+    writeBin(object = type.fun(data[idx]), con = con, size = size)
+  }
+}
 
 # Saves sparse matrix to binary file
 save.sp.matrix <- function(mat,filename) {
