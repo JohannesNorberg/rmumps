@@ -1,15 +1,11 @@
 MPICC=mpicc
-IDIR=/opt/local/include
-LDIR=/opt/local/lib
-LIBS=-ldmumps -lmumps_common
-CFLAGS=-O3 -I$(IDIR) -L$(LDIR)
+CFLAGS=-O3
+LIBS=-ldmumps -lmumps_common -lscalapack-openmpi -lopenblas -lpthread
 
+all: mumpsdrv
 
+mumpsdrv: mumpsdrv.c
+    $(MPICC) $(CFLAGS) mumpsdrv.c -o mumpsdrv $(LIBS)
 
-
-all: build
-
-
-build: mumpsdrv.c
-	#$(MPICC) -cc=gcc mumpsdrv.c -o mumpsdrv $(LIBS) $(CFLAGS)
-	$(MPICC) mumpsdrv.c -o mumpsdrv $(LIBS) $(CFLAGS)
+clean:
+    rm -f mumpsdrv
