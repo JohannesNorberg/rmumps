@@ -24,4 +24,4 @@ clean:
 # 
 # 
 # build: mumpsdrv.c
-#     $(MPICC) mumpsdrv.c -o mumpsdrv $(LIBS) $(CFLAGS)
+#   $(MPICC) mumpsdrv.c -o mumpsdrv $(LIBS) $(CFLAGS)
