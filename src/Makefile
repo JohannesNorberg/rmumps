@@ -5,10 +5,10 @@ LIBS=-ldmumps -lmumps_common -lscalapack-openmpi -lopenblas -lpthread
 all: mumpsdrv
 
 mumpsdrv: mumpsdrv.c
-    $(MPICC) $(CFLAGS) mumpsdrv.c -o mumpsdrv $(LIBS)
+	$(MPICC) $(CFLAGS) mumpsdrv.c -o mumpsdrv $(LIBS)
 
 clean:
-    rm -f mumpsdrv
+	rm -f mumpsdrv
 
 # Mac
 # MPICC=mpicc
